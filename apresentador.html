@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel do Projetor - MARC 21 Quest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Press+Start+2P&family=Plus+Jakarta+Sans:wght@600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b1319;
+      --gold: #d4af37;
+      --card: #162029;
+    }
+    body {
+      background: var(--bg);
+      color: #fff;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      margin: 0;
+      padding: 2rem;
+      display: grid;
+      grid-template-columns: 350px 1fr;
+      gap: 2rem;
+      min-height: 100vh;
+    }
+    .sidebar {
+      background: var(--card);
+      border: 2px solid var(--gold);
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .qr-box {
+      background: #fff;
+      padding: 1rem;
+      border-radius: 8px;
+      margin: 1rem 0;
+    }
+    .qr-box img { width: 200px; height: 200px; }
+    .main-panel {
+      background: var(--card);
+      border: 2px solid var(--gold);
+      border-radius: 12px;
+      padding: 2rem;
+    }
+    h1 { font-family: 'Cinzel', serif; color: var(--gold); margin-bottom: 0.5rem; }
+    .podium {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      gap: 1.5rem;
+      margin: 3rem 0;
+      height: 250px;
+    }
+    .step {
+      background: linear-gradient(180deg, rgba(212,175,55,0.3), rgba(212,175,55,0.05));
+      border: 2px solid var(--gold);
+      border-bottom: none;
+      border-radius: 8px 8px 0 0;
+      width: 120px;
+      text-align: center;
+      padding: 1rem 0.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .step.first { height: 220px; border-color: #ffd700; background: rgba(255,215,0,0.2); }
+    .step.second { height: 170px; }
+    .step.third { height: 130px; }
+    .player-name { font-weight: bold; font-size: 1.1rem; color: #fff; word-break: break-all; }
+    .player-score { font-family: 'Press Start 2P', monospace; font-size: 0.8rem; color: var(--gold); margin-top: 5px; }
+    .recent-list {
+      margin-top: 2rem;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      padding-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="sidebar">
+    <div>
+      <h1>MARC 21</h1>
+      <p style="color: var(--gold); font-size: 0.9rem;">Acesse pelo Celular</p>
+      <div class="qr-box">
+        <!-- Substitua pelo QR Code gerado para seu link final -->
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://quiz-marc-default-rtdb.firebaseio.com/" alt="QR Code do Jogo">
+      </div>
+      <p style="font-size: 0.85rem; color: #a0aab2;">Aponte a câmera e entre na Biblioteca Encantada</p>
+    </div>
+    
+    <div>
+      <p>Aulas de Catalogação</p>
+      <small style="color: var(--gold);">Profa. Márcia Regina da Silva</small>
+    </div>
+  </div>
+
+  <div class="main-panel">
+    <h1>Pódio ao Vivo da Turma</h1>
+    <p style="color: #a0aab2;">Resultados atualizados em tempo real via Realtime Database</p>
+
+    <div class="podium">
+      <div class="step second">
+        <span style="font-size: 1.5rem;">🥈</span>
+        <div>
+          <div class="player-name" id="pos-2-name">--</div>
+          <div class="player-score" id="pos-2-score">0 pts</div>
+        </div>
+        <strong>2º Lugar</strong>
+      </div>
+      <div class="step first">
+        <span style="font-size: 2rem;">👑</span>
+        <div>
+          <div class="player-name" id="pos-1-name">--</div>
+          <div class="player-score" id="pos-1-score">0 pts</div>
+        </div>
+        <strong>1º Lugar</strong>
+      </div>
+      <div class="step third">
+        <span style="font-size: 1.5rem;">🥉</span>
+        <div>
+          <div class="player-name" id="pos-3-name">--</div>
+          <div class="player-score" id="pos-3-score">0 pts</div>
+        </div>
+        <strong>3º Lugar</strong>
+      </div>
+    </div>
+
+    <div class="recent-list">
+      <h3>Últimas Partidas Concluídas</h3>
+      <ul id="ranking-list" style="list-style: none; padding-top: 0.5rem; line-height: 2;">
+        <!-- Lista dinâmica -->
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    const FIREBASE_URL = "https://quiz-marc-default-rtdb.firebaseio.com/";
+
+    function fetchRanking() {
+      fetch(`${FIREBASE_URL}/ranking.json`)
+        .then(res => res.json())
+        .then(data => {
+          if (!data) return;
+          const list = Object.values(data).sort((a, b) => b.pontos - a.pontos);
+          
+          if (list[0]) { document.getElementById("pos-1-name").innerText = list[0].apelido; document.getElementById("pos-1-score").innerText = list[0].pontos + " pts"; }
+          if (list[1]) { document.getElementById("pos-2-name").innerText = list[1].apelido; document.getElementById("pos-2-score").innerText = list[1].pontos + " pts"; }
+          if (list[2]) { document.getElementById("pos-3-name").innerText = list[2].apelido; document.getElementById("pos-3-score").innerText = list[2].pontos + " pts"; }
+
+          const ul = document.getElementById("ranking-list");
+          ul.innerHTML = "";
+          list.slice(3, 8).forEach((item, index) => {
+            const li = document.createElement("li");
+            li.innerHTML = `<strong>${index + 4}º</strong> ${item.apelido} — <span style="color:var(--gold);">${item.pontos} pts</span>`;
+            ul.appendChild(li);
+          });
+        });
+    }
+
+    // Atualiza a cada 4 segundos durante a apresentação
+    setInterval(fetchRanking, 4000);
+    fetchRanking();
+  </script>
+</body>
+</html>
